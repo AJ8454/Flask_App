@@ -1,8 +1,8 @@
 from unittest import result
-
+from datetime import datetime
 import mysql.connector
 import json
-from flask import make_response
+from flask import make_response, send_file
 
 class user_model():
     def __init__(self):
@@ -76,4 +76,32 @@ class user_model():
         self.cur.execute(qry)
         result = self.cur.fetchall()
         return make_response({'data':result, 'page': page, 'limit': limit}, 200)
+
+    def user_upload_avatar_model(self, uid, file):
+        user = self.cur.execute(f'SELECT * FROM users WHERE id={uid}')
+        user = self.cur.fetchone()
+        if(user is None):
+            return make_response({'message': 'User not found'}, 404)
+        else:
+            uniqueFilename = str(datetime.now().timestamp()).replace('.', '')
+            ext = file.filename.split('.')[-1]
+            finalFilePath = f"uploads/{uniqueFilename}.{ext}"
+            file.save(finalFilePath)
+            self.cur.execute(f"UPDATE users SET avatar='{finalFilePath}' WHERE id={uid}")
+            if self.cur.rowcount > 0:
+                return make_response({'message': 'File uploaded successfully'}, 200)
+            else:
+                return make_response({'message': 'Nothing to update'}, 404)
+    
+    def user_get_avatar_model(self, uid):
+        user = self.cur.execute(f'SELECT * FROM users WHERE id={uid}')
+        user = self.cur.fetchone()
+        if(user is None):
+            return make_response({'message': 'User not found'}, 404)
+        else:
+            if user['avatar'] is not None and len(user['avatar']) > 0:
+                return make_response(send_file(user['avatar']), 200)
+            else:
+                return make_response({'message': 'Avatar not found'}, 404)
+
         

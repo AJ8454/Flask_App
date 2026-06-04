@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, send_file
 from models.user_model import user_model
 
 bp = Blueprint('user', __name__)
@@ -31,3 +31,12 @@ def user_patch_controller(id):
 @bp.route('/user/getall/limit/<int:limit>/page/<int:page>', methods=['GET'])
 def user_pagination_controller(limit, page):
     return userObj.user_pagination_model(limit, page)
+
+@bp.route('/user/<int:uid>/upload/avatar', methods=['PUT'])
+def user_upload_avatar_controller(uid):
+    file = request.files['avatar']
+    return userObj.user_upload_avatar_model(uid, file)
+
+@bp.route('/user/<int:uid>/avatar', methods=['GET'])
+def user_get_avatar_controller(uid):
+    return userObj.user_get_avatar_model(uid)

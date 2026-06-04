@@ -27,3 +27,7 @@ def user_delete_controller(id):
 @bp.route('/user/patch/<int:id>', methods=['PATCH'])
 def user_patch_controller(id):
     return userObj.user_patch_model(id, request.form)
+
+@bp.route('/user/getall/limit/<int:limit>/page/<int:page>', methods=['GET'])
+def user_pagination_controller(limit, page):
+    return userObj.user_pagination_model(limit, page)

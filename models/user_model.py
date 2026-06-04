@@ -69,4 +69,11 @@ class user_model():
         else:
             return make_response({'message': 'User not found'}, 404)
 
+    def user_pagination_model(self, limit, page):
+        start = (page * limit) - limit
+        print(start)
+        qry = f'SELECT * FROM users LIMIT {start}, {limit}'
+        self.cur.execute(qry)
+        result = self.cur.fetchall()
+        return make_response({'data':result, 'page': page, 'limit': limit}, 200)
         

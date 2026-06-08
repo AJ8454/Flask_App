@@ -1,10 +1,15 @@
 from flask import Blueprint, request, send_file
 from models.user_model import user_model
+from models.auth_model import auth_model
 
 bp = Blueprint('user', __name__)
 userObj = user_model() 
 
+authbp = Blueprint('auth', __name__)
+authObj = auth_model()
+
 @bp.route('/user/getall')
+@authObj.token_auth()
 def user_getall_controller():
     return userObj.user_getall_model()
 
@@ -13,8 +18,13 @@ def user_get_controller(id):
     return userObj.user_get_model(id)
 
 @bp.route('/user/add', methods=['POST'])
+@authObj.token_auth()
 def user_add_controller():
     return userObj.user_add_model(request.form)
+
+@bp.route('/user/addmultiple', methods=['POST'])
+def user_add_multiple_controller():
+    return userObj.user_add_multiple_model(request.json)
 
 @bp.route('/user/update', methods=['PUT'])
 def user_update_controller():
@@ -40,3 +50,7 @@ def user_upload_avatar_controller(uid):
 @bp.route('/user/<int:uid>/avatar', methods=['GET'])
 def user_get_avatar_controller(uid):
     return userObj.user_get_avatar_model(uid)
+
+@bp.route("/user/login", methods=['POST'])
+def user_login_controller():
+    return userObj.user_login_model(request.form)

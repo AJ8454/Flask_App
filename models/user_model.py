@@ -1,18 +1,21 @@
-from unittest import result
-from datetime import datetime
 import mysql.connector
 import json
+import jwt
+from unittest import result
+from datetime import datetime, timedelta
 from flask import make_response, send_file
+from config.config import dbConfig
+
 
 class user_model():
     def __init__(self):
         # db connection logic here
         try:
             self.con = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                password='',
-                database='flask_learning'
+                host=dbConfig["host"],
+                user=dbConfig["user"],
+                password=dbConfig["password"],
+                database=dbConfig["database"]
             )
             self.con.autocommit = True
             self.cur = self.con.cursor(dictionary=True)
@@ -38,11 +41,16 @@ class user_model():
             return make_response({'message': 'No users found'}, 204)
 
     def user_add_model(self, data):
-        self.cur.execute(f"INSERT INTO users (name, email, phone, role, password) VALUES ('{data["name"]}', '{data["email"]}','{data["phone"]}', '{data["role"]}','{data["password"]}')")
+        self.cur.execute(f"INSERT INTO users (name, email, phone, role_id, password) VALUES ('{data["name"]}', '{data["email"]}','{data["phone"]}', '{data["role_id"]}','{data["password"]}')")
         return make_response({'message': 'User added successfully'}, 201)
     
+    def user_add_multiple_model(self, data):
+        for user in data:
+            self.cur.execute(f"INSERT INTO users (name, email, phone, role_id, password) VALUES ('{user['name']}', '{user['email']}','{user['phone']}', '{user['role_id']}','{user['password']}')")
+        return make_response({'message': 'Users added successfully'}, 201)
+    
     def user_update_model(self, data):
-        self.cur.execute(f"UPDATE users SET name='{data["name"]}', email='{data["email"]}', phone='{data["phone"]}', role='{data["role"]}', password='{data["password"]}' WHERE id={data['id']}")
+        self.cur.execute(f"UPDATE users SET name='{data["name"]}', email='{data["email"]}', phone='{data["phone"]}', role_id='{data["role_id"]}', password='{data["password"]}' WHERE id={data['id']}")
         if self.cur.rowcount > 0:
             return make_response({'message': 'User updated successfully'}, 200)
         else:
@@ -103,5 +111,18 @@ class user_model():
                 return make_response(send_file(user['avatar']), 200)
             else:
                 return make_response({'message': 'Avatar not found'}, 404)
+            
+    def user_login_model(self, data):
+        self.cur.execute(f"SELECT id, name, email, phone, avatar, role_id FROM users WHERE email='{data['email']}' AND password='{data['password']}'")
+        result = self.cur.fetchone();
+        exp_time = datetime.now() + timedelta(minutes=15)
+        exp_epoch_time = int(exp_time.timestamp())
+        payload = {
+            "payload": result,
+            "exp": exp_epoch_time
+        }
+        token = jwt.encode(payload, 'secret', algorithm='HS256')
+
+        return make_response({'token': token}, 200)
 
         
